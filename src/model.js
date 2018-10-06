@@ -1,9 +1,15 @@
 export const extend = ({props, derived = {}, reducers = {}, effects}) => {
 
     class Model extends BaseModel {
+
         constructor(state) {
             super(state, props, derived, reducers, effects)
         }
+
+        getPropMap() {
+            return super.createPropMap(props)
+        }
+
     }
 
     return Model

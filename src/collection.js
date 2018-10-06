@@ -5,6 +5,8 @@ export const extend = ({model, reducers = {}}) => {
     return class Collection {
         constructor(state) {
             this.Model = this.setModel(model)
+            
+            this.typeMap = model.prototype.getPropMap()
 
             this.reducers = this.setReducers(reducers)
 

@@ -2,7 +2,7 @@ import { BaseModel } from './model'
 
 export default class StoreClass {
     constructor({models = {}, middlewares}) {
-        this.connectDevTools()
+        this._connectDevTools()
         this.eventListeners = []
         this.state = this.setModels(models)
         this.middlewares = middlewares
@@ -24,7 +24,7 @@ export default class StoreClass {
         return models
     }
 
-    connectDevTools() {
+    _connectDevTools() {
         this.withDevTools = (
             process.env.NODE_ENV === 'development' &&
             typeof window !== 'undefined' && window.__REDUX_DEVTOOLS_EXTENSION__
@@ -32,8 +32,46 @@ export default class StoreClass {
 
         if (this.withDevTools) {
             this.devTools = window.__REDUX_DEVTOOLS_EXTENSION__.connect()
+            this.unsubscribeDevTools = this.devTools.subscribe((message) => {
+                if (message.type === 'DISPATCH' && message.payload.type === 'JUMP_TO_ACTION') {
+                    this._timeTravel(JSON.parse(message.state))
+                }
+            })
         }
 
+    }
+
+    _timeTravel(newState) {
+
+        Object.keys(newState).map((key) => {
+            const context = this.state[key]
+
+            if (!context.Model) {
+                Object.keys(newState[key]).map((prop) => {
+                    if ( !context.typeMap.has(prop) ) {
+                        delete newState[key][prop]
+                    }
+                }) 
+            } else {
+                newState[key].map((item, i) => {
+                    Object.keys(item).map((prop) => {
+                        if ( !context.typeMap.has(prop) ) {
+                            delete newState[key][i][prop]
+                        }
+                    })
+                })
+            }
+
+            if ( typeof context['update'] === 'function' ) {
+                context.setState(context['update'].call(this, context.state, newState[key]))
+            } else {
+                context.setState(newState[key])
+            }
+
+        })
+
+        this.emit()
+        
     }
 
     subscribe(fn) {
