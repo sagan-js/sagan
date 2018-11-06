@@ -5,7 +5,7 @@ export const extend = ({model, reducers = {}}) => {
     return class Collection {
         constructor(state) {
             this.Model = this.setModel(model)
-            
+
             this.typeMap = model.prototype.getPropMap()
 
             this.reducers = this.setReducers(reducers)
@@ -24,16 +24,16 @@ export const extend = ({model, reducers = {}}) => {
         }
 
         setReducers(reducers) {
-            if (typeof reducers !== 'object'|| reducers.constructor === Array) {
+            if (typeof reducers !== 'object' || reducers.constructor === Array) {
                 throw new Error('Expected collection reducer to receive an object')
             }
-    
-            Object.keys(reducers).forEach((key, i) => {
+
+            Object.keys(reducers).forEach((key) => {
                 if (typeof reducers[key] !== 'function' ) {
                     throw new Error('Expected collection reducer to be a function')
                 }
             })
-    
+
             return reducers
         }
 

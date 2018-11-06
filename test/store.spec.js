@@ -30,8 +30,10 @@ describe('Store', () => {
 
         const methods = Object.keys(Store.prototype)
 
-        expect(methods.length).toBe(9)
-        expect(methods).toContain('connectDevTools')
+        expect(methods.length).toBe(10)
+        expect(methods).toContain('setModels')
+        expect(methods).toContain('_connectDevTools')
+        expect(methods).toContain('_timeTravel')
         expect(methods).toContain('subscribe')
         expect(methods).toContain('emit')
         expect(methods).toContain('getState')

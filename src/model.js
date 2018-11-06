@@ -31,11 +31,11 @@ export const BaseModel = class BaseModel {
 
     setReducers(reducers) {
 
-        if (typeof reducers !== 'object'|| reducers.constructor === Array) {
+        if (typeof reducers !== 'object' || reducers.constructor === Array) {
             throw new Error('Expected reducers to receive an object')
         }
 
-        Object.keys(reducers).forEach((key, i) => {
+        Object.keys(reducers).forEach((key) => {
             if (typeof reducers[key] !== 'function' ) {
                 throw new Error('Expected reducer to be a function')
             }
@@ -46,11 +46,11 @@ export const BaseModel = class BaseModel {
 
     setDerived(derived) {
 
-        if (typeof derived !== 'object'|| derived.constructor === Array) {
+        if (typeof derived !== 'object' || derived.constructor === Array) {
             throw new Error('Expected derived props to receive an object')
         }
 
-        Object.keys(derived).forEach((key, i) => {
+        Object.keys(derived).forEach((key) => {
             if (typeof derived[key] !== 'object' ) {
                 throw new Error('Expected derived prop to be an object')
             }

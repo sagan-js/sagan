@@ -13,12 +13,12 @@ export default class StoreClass {
             throw new Error('Expected models to receive an object')
         }
 
-        Object.keys(models).forEach((key, i) => {
+        Object.keys(models).forEach((key) => {
             if (!models[key].Model && !(models[key] instanceof BaseModel)) {
                 throw new Error('Expected model to be instance of Sagan model')
             } else if (models[key].Model && !(models[key].Model.prototype instanceof BaseModel)) {
                 throw new Error('Expected collection model to be instance of Sagan model')
-            }  
+            }
         })
 
         return models
@@ -43,18 +43,18 @@ export default class StoreClass {
 
     _timeTravel(newState) {
 
-        Object.keys(newState).map((key) => {
+        Object.keys(newState).forEach((key) => {
             const context = this.state[key]
 
             if (!context.Model) {
-                Object.keys(newState[key]).map((prop) => {
+                Object.keys(newState[key]).forEach((prop) => {
                     if ( !context.typeMap.has(prop) ) {
                         delete newState[key][prop]
                     }
-                }) 
+                })
             } else {
-                newState[key].map((item, i) => {
-                    Object.keys(item).map((prop) => {
+                newState[key].forEach((item, i) => {
+                    Object.keys(item).forEach((prop) => {
                         if ( !context.typeMap.has(prop) ) {
                             delete newState[key][i][prop]
                         }
@@ -71,7 +71,7 @@ export default class StoreClass {
         })
 
         this.emit()
-        
+
     }
 
     subscribe(fn) {
