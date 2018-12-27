@@ -1,5 +1,7 @@
 import Store from '../src/store'
 import { extend as extendModel } from '../src/model'
+import { extend as extendCollection } from '../src/collection'
+
 
 
 const About = extendModel({
@@ -30,7 +32,7 @@ describe('Store', () => {
 
         const methods = Object.keys(Store.prototype)
 
-        expect(methods.length).toBe(10)
+        expect(methods.length).toBe(14)
         expect(methods).toContain('setModels')
         expect(methods).toContain('_connectDevTools')
         expect(methods).toContain('_timeTravel')
@@ -39,7 +41,11 @@ describe('Store', () => {
         expect(methods).toContain('getState')
         expect(methods).toContain('areEqualShallow')
         expect(methods).toContain('applyMiddlewares')
+        expect(methods).toContain('getReducerContext')
         expect(methods).toContain('splitPayloadType')
+        expect(methods).toContain('callReducers')
+        expect(methods).toContain('callBaseReducers')
+        expect(methods).toContain('generateContextList')
         expect(methods).toContain('dispatch')
 
     })
@@ -110,6 +116,45 @@ describe('Store', () => {
 
     })
 
+    // it('add/remove collection base method apply to the previous state', () => {
+    //     const About = extendModel({
+    //         props: {
+    //             name: 'string'
+    //         },
+    //         reducers: {
+    //             setName: function(state, payload) {
+    //                 return {
+    //                     ...state,
+    //                     name: payload
+    //                 }
+    //             }
+    //         }
+    //     })
+
+    //     const saganModelInstance= new About({
+    //         name: ''
+    //     })
+
+    //     const store = new Store({
+    //         models: {
+    //             sagan: saganModelInstance
+    //         }
+    //     })
+
+    //     expect(store.getState().sagan.name).toEqual('')
+
+    //     store.dispatch({type: 'sagan:update', payload: {name: 'Sagan'}})
+
+    //     expect(store.getState()).toEqual(
+    //         {
+    //             sagan: {
+    //                 name: 'Sagan'
+    //             }
+    //         }
+    //     )
+
+    // })
+
     it('reducer applies to the previous state', () => {
         const About = extendModel({
             props: {
@@ -148,6 +193,45 @@ describe('Store', () => {
             }
         )
     })
+
+    // it('reducer applies to the previous state of nested collection', () => {
+    //     const About = extendModel({
+    //         props: {
+    //             name: 'string'
+    //         },
+    //         reducers: {
+    //             setName: function(state, payload) {
+    //                 return {
+    //                     ...state,
+    //                     ...payload
+    //                 }
+    //             }
+    //         }
+    //     })
+
+    //     const saganModelInstance= new About({
+    //         name: ''
+    //     })
+
+    //     const store = new Store({
+    //         models: {
+    //             sagan: saganModelInstance
+    //         }
+    //     })
+
+    //     expect(store.getState().sagan.name).toEqual('')
+
+
+    //     store.dispatch({type: 'sagan/setName', payload: {name: 'Sagan'}})
+
+    //     expect(store.getState()).toEqual(
+    //         {
+    //             sagan: {
+    //                 name: 'Sagan'
+    //             }
+    //         }
+    //     )
+    // })
 
     it('throws if models is not an object', () => {
         expect(() => {

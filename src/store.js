@@ -119,6 +119,18 @@ export default class StoreClass {
         }
     }
 
+    getReducerContext(type, separator) {
+        let { model, reducer } = this.splitPayloadType(type, separator)
+        let context = this.state[model]
+        if ( reducer.indexOf('|') > -1 ) {
+            let { model: collection, reducer: collectionReducer } = this.splitPayloadType(reducer, '|')
+            context = context.collections[collection]
+            reducer = collectionReducer
+        }
+
+        return {context, reducer}
+    }
+
     splitPayloadType(type, separator) {
         const split = type.split(separator)
         const model = split[0]
@@ -126,21 +138,49 @@ export default class StoreClass {
         return {model, reducer}
     }
 
+    /*
+    ** Call user reducers on model
+    */
+    callReducers(context, reducer, payload) {
+        if ( context.reducers && context.reducers.hasOwnProperty(reducer) ) {
+            context.setState(context.reducers[reducer].call(this, context.state, payload))
+        }
+    }
+
+    /*
+    ** Call inherited base reducers on model
+    */
+    callBaseReducers(context, reducer, payload) {
+        if ( context[reducer] && typeof context[reducer] === 'function' ) {
+            context.setState(context[reducer].call(this, context.state, payload))
+        }
+    }
+
+    /*
+    ** Generate list of all model/collection contexts
+    */
+    generateContextList(contextList, context) {
+        Object.keys(context).forEach(model => {
+            const currentContext = context[model]
+            contextList.push(currentContext)
+
+            if (currentContext.collections && Object.keys(currentContext.collections).length) {
+                this.generateContextList(contextList, currentContext.collections)
+            }
+        })
+        return contextList
+    }
+
     dispatch({type, payload}) {
 
         const oldState = this.getState()
 
         if (type.indexOf('/') > -1) {
-
-            const { model, reducer } = this.splitPayloadType(type, '/')
-
             /*
-            ** Call reducers
+            ** Call namespaced reducers or reducer on nested collection
             */
-            const context = this.state[model]
-            if ( context.reducers && context.reducers.hasOwnProperty(reducer) ) {
-                context.setState(context.reducers[reducer].call(this, context.state, payload))
-            }
+            const {context, reducer} = this.getReducerContext(type, '/')
+            this.callReducers(context, reducer, payload)
 
             /*
             ** Call effects
@@ -148,30 +188,21 @@ export default class StoreClass {
             if (context.effects && context.effects.hasOwnProperty(reducer)) {
                 context.effects[reducer].call(this, context.state, payload)
             }
-
         } else if (type.indexOf(':') > -1) {
-
-            const { model, reducer } = this.splitPayloadType(type, ':')
-            const context = this.state[model]
-
-            if ( typeof context[reducer] === 'function' ) {
-                context.setState(context[reducer].call(this, context.state, payload))
-            }
-
+            /*
+            ** Call base reducers inherited by models
+            */
+            const {context, reducer} = this.getReducerContext(type, ':')
+            this.callBaseReducers(context, reducer, payload)
         } else {
+            /*
+            ** Call reducers on all model contexts
+            */
             const reducer = type
-            Object.keys(this.state).forEach(model => {
-
-                const context = this.state[model]
-
-                if (context.reducers.hasOwnProperty(reducer)) {
-
-                    context.setState(context.reducers[reducer].call(this, context.state, payload))
-
-                }
-
+            const contextList = this.generateContextList([], this.state)
+            contextList.forEach(context => {
+                this.callReducers(context, reducer, payload)
             })
-
         }
 
         if (!this.areEqualShallow(oldState, this.getState())) {

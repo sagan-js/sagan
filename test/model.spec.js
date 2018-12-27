@@ -21,13 +21,17 @@ describe('Model', () => {
     it('exposes the public API', () => {
         const methods = Object.keys(BaseModel.prototype)
 
-        expect(methods.length).toBe(12)
+        expect(methods.length).toBe(16)
+        expect(methods).toContain('initializeCollections')
+        expect(methods).toContain('checkTypeValidity')
         expect(methods).toContain('createPropMap')
         expect(methods).toContain('update')
         expect(methods).toContain('setState')
         expect(methods).toContain('checkDerivedDeps')
         expect(methods).toContain('setDerivedState')
+        expect(methods).toContain('setCollectionState')
         expect(methods).toContain('validateProps')
+        expect(methods).toContain('validateArrayElementType')
         expect(methods).toContain('checkIsRequired')
         expect(methods).toContain('checkTypes')
         expect(methods).toContain('getBaseState')
@@ -158,13 +162,32 @@ describe('Model', () => {
             }
         })
 
-        const spy1 = jest.spyOn(global.console, 'error')
-        BaseModel.prototype.checkTypes({name: 'Sagan', user: 'Atreyu'}, typeMap)
-        expect(spy1).not.toHaveBeenCalled()
+        const typeMap2 = BaseModel.prototype.createPropMap({
+            name: 'string',
+            users: {
+                type: 'array',
+                required: true,
+                elements: 'string'
+            }
+        })
 
-        const spy2 = jest.spyOn(global.console, 'error')
+        console.error = jest.fn();
+
+        BaseModel.prototype.checkTypes({name: 'Sagan', user: 'Atreyu'}, typeMap)
+        expect(console.error).not.toHaveBeenCalled()
+        console.error.mockRestore()
+
         BaseModel.prototype.checkTypes({name: 'Sagan'}, typeMap)
-        expect(spy2).toHaveBeenCalled()
+        expect(console.error).toHaveBeenCalled()
+        console.error.mockRestore()
+
+        BaseModel.prototype.checkTypes({name: 'Sagan', users: ['Carl']}, typeMap2)
+        expect(console.error).not.toHaveBeenCalled()
+        console.error.mockRestore()
+
+        BaseModel.prototype.checkTypes({name: 'Sagan', users: [0]}, typeMap2)
+        expect(console.error).toHaveBeenCalled()
+        console.error.mockRestore()
 
     })
 
