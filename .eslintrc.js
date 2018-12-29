@@ -30,14 +30,5 @@ module.exports = {
         "new-cap": 1, // require capital letter for new constructors
         "consistent-this": [1, "that"], // force 'that' for context reference - not '_this', 'self', etc.
         "func-names": 0, // require "double function naming" convention for clearer stack traces
-    },
-  
-    overrides: [
-    //   {
-    //     files: 'test/**/*.js',
-    //     env: {
-    //       jest: true,
-    //     },
-    //   },
-    ],
+    }
   }

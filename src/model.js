@@ -39,7 +39,7 @@ export const BaseModel = class BaseModel {
             collectionInstances[key] = collection
         })
         return collectionInstances
-    } 
+    }
 
     setReducers(reducers) {
 
@@ -160,7 +160,7 @@ export const BaseModel = class BaseModel {
         Object.keys(this.collections).forEach(key => {
             state[key] = this.collections[key].getState()
         })
-        return state 
+        return state
     }
 
     validateProps(obj, typeMap) {
@@ -171,7 +171,7 @@ export const BaseModel = class BaseModel {
                 } else {
                     const mapType = typeMap.get(key).type
                     const keyType = Array.isArray(obj[key]) ? 'array' : typeof obj[key]
-                    if ( keyType !== mapType && mapType !== 'any')  {
+                    if ( keyType !== mapType && mapType !== 'any') {
                         throw new Error(`${key}: Failed prop type of ${keyType}. Expected ${mapType}.`)
                     }
                 }
@@ -227,7 +227,7 @@ export const BaseModel = class BaseModel {
             if (propData.type === 'object' && propData.props && obj.hasOwnProperty(key)) {
                 this.checkTypes(obj[key], propData.props)
             }
-            if(propData.type === 'array' && propData.elements && obj.hasOwnProperty(key)) {
+            if (propData.type === 'array' && propData.elements && obj.hasOwnProperty(key)) {
                 this.validateArrayElementType(key, obj[key], propData.elements)
             }
         })
