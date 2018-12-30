@@ -1,7 +1,7 @@
 {
     "presets": [
         [
-            "env",
+            "@babel/preset-env",
             {
                 "targets": {
                     "browsers": [
@@ -15,8 +15,7 @@
                 "modules": false,
                 "loose": true
             }
-        ],
-        "jest"
+        ]
     ],
     "plugins": [
         "transform-object-rest-spread"
@@ -25,7 +24,7 @@
         "commonjs": {
             "presets": [
                 [
-                    "env",
+                    "@babel/preset-env",
                     {
                         "loose": true
                     }
@@ -35,7 +34,7 @@
         "test": {
             "presets": [
               [
-                "env",
+                "@babel/preset-env",
                 {
                   "modules": "commonjs",
                   "loose": true

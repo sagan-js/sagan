@@ -1,9 +1,9 @@
-export const extend = ({props, derived = {}, reducers = {}, effects}) => {
+export const extend = ({props, collections = {}, derived = {}, reducers = {}, effects}) => {
 
     class Model extends BaseModel {
 
         constructor(state) {
-            super(state, props, derived, reducers, effects)
+            super(state, props, collections, derived, reducers, effects)
         }
 
         getPropMap() {
@@ -18,15 +18,27 @@ export const extend = ({props, derived = {}, reducers = {}, effects}) => {
 
 export const BaseModel = class BaseModel {
 
-    constructor(state, props, derived, reducers, effects) {
+    constructor(state, props, collections, derived, reducers, effects) {
         this.state = state
 
+        this.collections = this.initializeCollections(collections)
         this.typeMap = this.createPropMap(props)
         this.checkTypes(this.state, this.typeMap)
 
         this.derived = this.setDerived(derived)
         this.reducers = this.setReducers(reducers)
         this.effects = effects
+    }
+
+    initializeCollections(collections) {
+        const collectionInstances = {}
+        Object.keys(collections).forEach(key => {
+            const state = Object.assign([], this.state[key])
+            const collection = new collections[key](state)
+            delete this.state[key]
+            collectionInstances[key] = collection
+        })
+        return collectionInstances
     }
 
     setReducers(reducers) {
@@ -66,6 +78,18 @@ export const BaseModel = class BaseModel {
 
     }
 
+    checkTypeValidity(type) {
+        const typeList = ['string', 'number', 'boolean', 'object', 'array', 'any']
+        try {
+            if ( !typeList.includes(type) ) {
+                throw new Error(`${type}: Invalid prop type.`)
+            }
+        } catch (e) {
+            console.error(`%c ${e}`, 'color: red')
+        }
+        return type
+    }
+
     createPropMap(props) {
         const map = new Map()
 
@@ -76,7 +100,7 @@ export const BaseModel = class BaseModel {
             let values = {}
 
             if (typeof propKey === 'object') {
-                values.type = propKey.type
+                values.type = this.checkTypeValidity(propKey.type)
 
                 if ( propKey.hasOwnProperty('required') ) {
                     values.required = propKey.required
@@ -86,8 +110,12 @@ export const BaseModel = class BaseModel {
                     values.props = this.createPropMap(propKey.props)
                 }
 
+                if ( propKey.hasOwnProperty('elements') ) {
+                    values.elements = typeof propKey.elements === 'object' ? this.createPropMap(propKey.elements) : propKey.elements
+                }
+
             } else {
-                values.type = propKey
+                values.type = this.checkTypeValidity(propKey)
             }
 
             map.set(key, values)
@@ -128,6 +156,13 @@ export const BaseModel = class BaseModel {
         return state
     }
 
+    setCollectionState(state) {
+        Object.keys(this.collections).forEach(key => {
+            state[key] = this.collections[key].getState()
+        })
+        return state
+    }
+
     validateProps(obj, typeMap) {
         Object.keys(obj).forEach((key) => {
             try {
@@ -135,12 +170,30 @@ export const BaseModel = class BaseModel {
                     throw new Error(`${key}: Unexpected prop.`)
                 } else {
                     const mapType = typeMap.get(key).type
-                    if (typeof obj[key] !== mapType && mapType !== 'any') {
-                        throw new Error(`${key}: Failed prop type of ${typeof obj[key]}. Expected ${mapType}.`)
+                    const keyType = Array.isArray(obj[key]) ? 'array' : typeof obj[key]
+                    if ( keyType !== mapType && mapType !== 'any') {
+                        throw new Error(`${key}: Failed prop type of ${keyType}. Expected ${mapType}.`)
                     }
                 }
             } catch (e) {
                 console.error(`%c ${e}`, 'color: red')
+            }
+        })
+    }
+
+    validateArrayElementType(key, data, typeMap) {
+        data.forEach(element => {
+            if ( typeof typeMap !== 'object' ) {
+                try {
+                    const elementType = typeof element
+                    if ( elementType !== typeMap && typeMap !== 'any' ) {
+                        throw new Error(`${key}: Array failed prop type of ${elementType}. Expected ${typeMap}.`)
+                    }
+                } catch (e) {
+                    console.error(`%c ${e}`, 'color: red')
+                }
+            } else {
+                this.checkTypes(element, typeMap)
             }
         })
     }
@@ -174,15 +227,26 @@ export const BaseModel = class BaseModel {
             if (propData.type === 'object' && propData.props && obj.hasOwnProperty(key)) {
                 this.checkTypes(obj[key], propData.props)
             }
+            if (propData.type === 'array' && propData.elements && obj.hasOwnProperty(key)) {
+                this.validateArrayElementType(key, obj[key], propData.elements)
+            }
         })
 
     }
 
     getBaseState() {
-        return Object.assign({}, this.state)
+        const state = {
+            ...this.state,
+            ...this.setCollectionState(Object.assign({}, this.state))
+        }
+        return state
     }
 
     getState() {
-        return this.setDerivedState(Object.assign({}, this.state))
+        const state = {
+            ...this.setDerivedState(Object.assign({}, this.state)),
+            ...this.setCollectionState(Object.assign({}, this.state))
+        }
+        return state
     }
 }

@@ -106,6 +106,19 @@ props: {
                 street: 'string',
                 city: 'string'
             }
+        },
+        contacts: {
+            type: 'array',
+            required: false,
+            elements: {
+                street: 'string',
+                city: 'string'
+            }
+        },
+        phoneNumbers: {
+            type: 'array',
+            required: false,
+            elements: 'string'
         }
     },
 ```
@@ -113,17 +126,20 @@ props: {
 ##### Type Object
 ```javascript
 {
-    type: ['string', 'boolean', 'number', 'object', 'any']
-    required [boolean] (optional)
-    props: [type object] (optional)
+    type: ['string', 'boolean', 'number', 'object', 'array', 'any'],
+    required: [boolean] (optional),
+    props: [type object] (optional),
+    elements: [type object, 'string', 'boolean', 'number', 'array', 'any'] (optional)
 }
 ```
 
-`type`: Objects may recieve a type of a `string`, `boolean`, `number`, `object`, or `any`. 
+`type`: Objects may recieve a type of a `string`, `boolean`, `number`, `object`, `array`, or `any`. 
 
 `requred`: (optional) Props may be specified as required. The default is `false`. Props that are typed directly without a type object default to `false`
 
 `props`: (optional) The props option is reserved to props that are typed as an `object`. This option allows you to type nested props.
+
+`elements`: (optional) The elements option is reserved to props that are typed as an `array`. This option allows you to type array elements.
 
 #### Derived Props
 Sagan allows you to specify derived props. These are updated when their prop dependencies update.
@@ -249,16 +265,14 @@ The driving principle underlying Sagan is ease of dispatching actions and updati
 Here is a basic example of dispatching a `namespaced` payload to a reducer. Let's break down the action type `user/firstName`. In this case `user` is the model we want to specifically dispatch the action to, and `firstname` is the `reducer` we would like trigger. 
 
 ```
-store.dispatch({type: 'user/firstName', payload: 'Darth'})
+store.dispatch({type: 'user/firstName', payload: {firstName: 'Darth'}})
 ```
 
-The same action may also be dispatched without a `namespace` specified. Unlike the first example. An action without a namespace will attempt to trigger the `firstName` reducer on all models in the store. This is useful if you need to trigger updates on multiple points across the store.
+The same action may also be dispatched without a `namespace` specified. Unlike the first example. An action without a namespace will attempt to trigger the `firstName` reducer on all models and collections in the store. This is useful if you need to trigger updates on multiple points across the store.
 
 ```
-store.dispatch({type: 'firstName', payload: 'Darth'})
+store.dispatch({type: 'firstName', payload: {firstName: 'Darth'}})
 ```
-
-The third method of updating state is via the inherited methods on models and collections. Under most cases, using these methods should be sufficient.
 
 #### Models
 Models inherit an `update` method that ***must*** be namespaced when used. Take the following as an example. Here we are dispatching the `update` method to the `user` namespace (model). This method will attempt to merge the previous model's state with the passed payload.
@@ -268,7 +282,7 @@ store.dispatch({type: 'user:update', payload: {firstName: 'Lea', lastName: 'Orga
 ```
 
 #### Collections
-Collection inherit `addItem` and `removeItem` as methods. The are namespaced and used in the same manor as the model methods.
+Collections inherit `addItem` and `removeItem` as methods. They are namespaced and used in the same manner as the model methods.
 
 The following will add a new user to the `users` collection.
 
@@ -280,6 +294,22 @@ This example will remove a user at the following index.
 
 ```javascript
 store.dispatch({type: 'users:removeItem', payload: 1)
+```
+
+#### Nested Collections
+Dispatching an action to a collection nested within a model requires piping the collection namespace to the reducer you wish to trigger. This may be done with user defined or inherited reducers.
+
+**Note:** Due to possible action/reducer recursion on nested collection models, it is currently not possible to dispatch actions beyond single layer model/collection nestings. 
+
+The following will dispatch the addAddress action to the addresses collection on the user model. `[model]/[collection]|[reducer]`
+
+```
+store.dispatch({type: 'user/addresses|addAddress', payload: {city: 'Mos Eisley'}})
+```
+
+This example achieves the same end result, but instead uses the inherited `addItem` action.
+```
+store.dispatch({type: 'user:addresses|addItem', payload: {city: 'Mos Eisley'}})
 ```
 
 ### Listening to Updates

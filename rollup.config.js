@@ -14,7 +14,7 @@ if (env === 'es' || env === 'cjs') {
   config.external = []
   config.plugins.push(
     babel({
-      plugins: ['external-helpers'],
+      plugins: []
     })
   )
 }
@@ -27,7 +27,7 @@ if (env === 'development' || env === 'production') {
     }),
     babel({
       exclude: 'node_modules/**',
-      plugins: ['external-helpers'],
+      plugins: []
     }),
     replace({
       'process.env.NODE_ENV': JSON.stringify(env)

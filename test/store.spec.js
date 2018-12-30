@@ -1,5 +1,7 @@
 import Store from '../src/store'
 import { extend as extendModel } from '../src/model'
+import { extend as extendCollection } from '../src/collection'
+
 
 
 const About = extendModel({
@@ -30,7 +32,7 @@ describe('Store', () => {
 
         const methods = Object.keys(Store.prototype)
 
-        expect(methods.length).toBe(10)
+        expect(methods.length).toBe(14)
         expect(methods).toContain('setModels')
         expect(methods).toContain('_connectDevTools')
         expect(methods).toContain('_timeTravel')
@@ -39,7 +41,11 @@ describe('Store', () => {
         expect(methods).toContain('getState')
         expect(methods).toContain('areEqualShallow')
         expect(methods).toContain('applyMiddlewares')
+        expect(methods).toContain('getReducerContext')
         expect(methods).toContain('splitPayloadType')
+        expect(methods).toContain('callReducers')
+        expect(methods).toContain('callBaseReducers')
+        expect(methods).toContain('generateContextList')
         expect(methods).toContain('dispatch')
 
     })
@@ -110,6 +116,68 @@ describe('Store', () => {
 
     })
 
+    it('add/remove collection base method apply to the previous state', () => {
+        const User = extendModel({
+            props: {
+                name: 'string'
+            },
+            reducers: {
+                setName: function(state, payload) {
+                    return {
+                        ...state,
+                        name: payload
+                    }
+                }
+            }
+        })
+
+        const UserCollection = extendCollection({
+            model: User
+        })
+
+        const saganCollectionInstance= new UserCollection([
+            {
+                name: 'Sagan'
+            }
+        ])
+
+        const store = new Store({
+            models: {
+                sagan: saganCollectionInstance
+            }
+        })
+
+        expect(store.getState().sagan.length).toEqual(1)
+
+        store.dispatch({type: 'sagan:addItem', payload: {name: 'Carl'}})
+        expect(store.getState().sagan.length).toEqual(2)
+        expect(store.getState()).toEqual(
+            {
+                sagan: [
+                    {
+                        name: 'Sagan'
+                    },
+                    {
+                        name: 'Carl'
+                    }
+                ]
+            }
+        )
+
+        store.dispatch({type: 'sagan:removeItem', payload: 1})
+        expect(store.getState().sagan.length).toEqual(1)
+        expect(store.getState()).toEqual(
+            {
+                sagan: [
+                    {
+                        name: 'Sagan'
+                    }
+                ]
+            }
+        )
+
+    })
+
     it('reducer applies to the previous state', () => {
         const About = extendModel({
             props: {
@@ -147,6 +215,76 @@ describe('Store', () => {
                 }
             }
         )
+    })
+
+    it('reducer applies to the previous state of nested collection', () => {
+
+        const Property = extendModel({
+            props: {
+                street: 'string',
+                city: 'string',
+            }
+        })
+
+        const PropertyCollection = extendCollection({
+            model: Property,
+            reducers: {
+                addProperty: function(state, payload) {
+                    return [
+                        ...state,
+                        payload
+                    ]
+                },
+                removeProperty: function(state, payload) {
+        
+                    const newArray = state.filter((item, i) => {
+                        return i !== payload
+                    })
+        
+                    return newArray
+                }
+            }
+        })
+
+        const User = extendModel({
+            props: {
+                name: 'string'
+            },
+            collections: {
+                addresses: PropertyCollection
+            }
+        })
+
+        const userInstance= new User(
+            {
+                name: 'Sagan'
+            }
+        )
+
+        const store = new Store({
+            models: {
+                user: userInstance
+            }
+        })
+
+        store.dispatch({type: 'user/addresses|addProperty', payload: {street: '1 Docking Bay Way', city: "Death Star"}})
+        expect(store.getState().user.addresses.length).toEqual(1)
+        expect(store.getState()).toEqual(
+            {
+                user: {
+                    name: 'Sagan',
+                    addresses: [
+                        {
+                            street: '1 Docking Bay Way',
+                            city: "Death Star"
+                        }
+                    ]
+                }
+            }
+        )
+
+        store.dispatch({type: 'user/addresses|removeProperty', payload: 0})
+        expect(store.getState().user.addresses.length).toEqual(0)
     })
 
     it('throws if models is not an object', () => {
