@@ -1,6 +1,6 @@
 {
   "name": "sagan",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A typing and state management system for JavaScript apps",
   "main": "lib/sagan.js",
   "unpkg": "dist/sagan.js",
@@ -75,5 +75,6 @@
     "transformIgnorePatterns": [
       "node_modules/(?!(sagan)/)"
     ]
-  }
+  },
+  "gitHead": "5e4cf465779cd7e0ff55258fab9502bcfd170402"
 }
