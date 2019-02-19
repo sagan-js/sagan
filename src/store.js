@@ -180,12 +180,12 @@ export default class StoreClass {
             ** Call namespaced reducers or reducer on nested collection
             */
             const {context, reducer} = this.getReducerContext(type, '/')
-            this.callReducers(context, reducer, payload)
+            context && this.callReducers(context, reducer, payload)
 
             /*
             ** Call effects
             */
-            if (context.effects && context.effects.hasOwnProperty(reducer)) {
+            if (context && context.effects && context.effects.hasOwnProperty(reducer)) {
                 context.effects[reducer].call(this, context.state, payload)
             }
         } else if (type.indexOf(':') > -1) {
@@ -193,7 +193,7 @@ export default class StoreClass {
             ** Call base reducers inherited by models
             */
             const {context, reducer} = this.getReducerContext(type, ':')
-            this.callBaseReducers(context, reducer, payload)
+            context && this.callBaseReducers(context, reducer, payload)
         } else {
             /*
             ** Call reducers on all model contexts

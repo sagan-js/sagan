@@ -52,7 +52,7 @@ export const extend = ({model, reducers = {}}) => {
             return newArray
         }
 
-        setState(state) {
+        setState(state = []) {
 
             const mappedState = state.map(item => {
                 const newModel = new this.Model(item)
